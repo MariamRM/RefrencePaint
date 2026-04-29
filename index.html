@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reference Timer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="panel controls-panel">
+      <div class="eyebrow">Drawing Practice</div>
+      <h1>Reference Timer</h1>
+      <p class="intro">
+        Upload your reference images, choose how long each image stays on screen,
+        and let the timer cycle through them one by one.
+      </p>
+
+      <label class="field">
+        <span>Reference images</span>
+        <input id="imageInput" type="file" accept="image/*" multiple>
+      </label>
+
+      <div class="time-grid">
+        <label class="field">
+          <span>Minutes per image</span>
+          <input id="minutesInput" type="number" min="0" max="240" value="10">
+        </label>
+
+        <label class="field">
+          <span>Seconds per image</span>
+          <input id="secondsInput" type="number" min="0" max="59" value="0">
+        </label>
+      </div>
+
+      <div class="button-row">
+        <button id="startButton" class="primary">Start</button>
+        <button id="pauseButton" class="secondary" disabled>Pause</button>
+        <button id="restartButton" class="secondary" disabled>Restart</button>
+        <button id="resetButton" class="ghost">Reset</button>
+      </div>
+
+      <div class="status-card">
+        <div class="status-topline">
+          <span id="statusLabel">Waiting for images</span>
+          <span id="imageCounter">0 / 0</span>
+        </div>
+        <div id="countdown" class="countdown">00:00</div>
+        <div id="currentImageName" class="current-image-name">No image selected</div>
+      </div>
+
+      <section class="queue">
+        <div class="queue-header">
+          <h2>Image Queue</h2>
+          <span id="queueCount">0 images</span>
+        </div>
+        <div id="previewGrid" class="preview-grid"></div>
+      </section>
+    </section>
+
+    <section class="panel viewer-panel">
+      <div id="viewerState" class="viewer-state">
+        <p>Upload images to begin.</p>
+      </div>
+      <img id="referenceImage" class="reference-image hidden" alt="Current reference">
+      <div id="doneOverlay" class="done-overlay hidden">
+        <h2>Done</h2>
+        <p>All reference images have been shown.</p>
+        <button id="runAgainButton" class="primary">Run Again</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

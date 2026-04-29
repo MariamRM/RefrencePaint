@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: reference-timer
+    runtime: static
+    buildCommand: ""
+    staticPublishPath: .
