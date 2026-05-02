@@ -13,6 +13,7 @@ const dom = {
   zoomOutButton: document.getElementById("zoomOutButton"),
   zoomResetButton: document.getElementById("zoomResetButton"),
   themeToggle: document.getElementById("themeToggle"),
+  themeIcon: document.getElementById("themeIcon"),
   statusLabel: document.getElementById("statusLabel"),
   imageCounter: document.getElementById("imageCounter"),
   countdown: document.getElementById("countdown"),
@@ -107,7 +108,9 @@ function updateButtons() {
   dom.zoomInButton.disabled = !hasImages;
   dom.zoomOutButton.disabled = !hasImages;
   dom.zoomResetButton.disabled = !hasImages;
-  dom.themeToggle.textContent = state.darkMode ? "Light mode" : "Dark mode";
+  dom.themeIcon.textContent = state.darkMode ? "☀" : "☾";
+  dom.themeToggle.setAttribute("aria-label", state.darkMode ? "Switch to light mode" : "Switch to dark mode");
+  dom.themeToggle.setAttribute("title", state.darkMode ? "Switch to light mode" : "Switch to dark mode");
 }
 
 function applyZoom() {
