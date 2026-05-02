@@ -7,6 +7,12 @@ const dom = {
   restartButton: document.getElementById("restartButton"),
   resetButton: document.getElementById("resetButton"),
   runAgainButton: document.getElementById("runAgainButton"),
+  previousButton: document.getElementById("previousButton"),
+  nextButton: document.getElementById("nextButton"),
+  zoomInButton: document.getElementById("zoomInButton"),
+  zoomOutButton: document.getElementById("zoomOutButton"),
+  zoomResetButton: document.getElementById("zoomResetButton"),
+  themeToggle: document.getElementById("themeToggle"),
   statusLabel: document.getElementById("statusLabel"),
   imageCounter: document.getElementById("imageCounter"),
   countdown: document.getElementById("countdown"),
@@ -14,6 +20,7 @@ const dom = {
   queueCount: document.getElementById("queueCount"),
   previewGrid: document.getElementById("previewGrid"),
   referenceImage: document.getElementById("referenceImage"),
+  referenceStage: document.getElementById("referenceStage"),
   viewerState: document.getElementById("viewerState"),
   doneOverlay: document.getElementById("doneOverlay")
 };
@@ -21,12 +28,15 @@ const dom = {
 const state = {
   images: [],
   currentIndex: 0,
-  secondsPerImage: 600,
+  defaultSecondsPerImage: 600,
   timeLeft: 0,
   timerId: null,
   isRunning: false,
   isPaused: false,
-  finished: false
+  finished: false,
+  zoom: 1,
+  darkMode: false,
+  audioContext: null
 };
 
 function formatTime(totalSeconds) {
@@ -40,6 +50,42 @@ function getDurationInSeconds() {
   const minutes = Number.parseInt(dom.minutesInput.value, 10) || 0;
   const seconds = Number.parseInt(dom.secondsInput.value, 10) || 0;
   return (minutes * 60) + seconds;
+}
+
+function getImageDuration(image) {
+  return Math.max(1, (image.minutes * 60) + image.seconds);
+}
+
+function playBeep(frequency = 880, durationMs = 180) {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+
+  if (!AudioContextClass) {
+    return;
+  }
+
+  if (!state.audioContext) {
+    state.audioContext = new AudioContextClass();
+  }
+
+  const context = state.audioContext;
+
+  if (context.state === "suspended") {
+    context.resume().catch(() => {});
+  }
+
+  const oscillator = context.createOscillator();
+  const gainNode = context.createGain();
+
+  oscillator.type = "sine";
+  oscillator.frequency.value = frequency;
+  gainNode.gain.setValueAtTime(0.0001, context.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.14, context.currentTime + 0.01);
+  gainNode.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + (durationMs / 1000));
+
+  oscillator.connect(gainNode);
+  gainNode.connect(context.destination);
+  oscillator.start();
+  oscillator.stop(context.currentTime + (durationMs / 1000));
 }
 
 function revokeImageUrls() {
@@ -56,6 +102,27 @@ function updateButtons() {
   dom.pauseButton.disabled = !state.isRunning && !state.isPaused;
   dom.pauseButton.textContent = state.isPaused ? "Resume" : "Pause";
   dom.restartButton.disabled = !hasImages;
+  dom.previousButton.disabled = !hasImages || state.currentIndex === 0;
+  dom.nextButton.disabled = !hasImages || state.currentIndex >= state.images.length - 1;
+  dom.zoomInButton.disabled = !hasImages;
+  dom.zoomOutButton.disabled = !hasImages;
+  dom.zoomResetButton.disabled = !hasImages;
+  dom.themeToggle.textContent = state.darkMode ? "Light mode" : "Dark mode";
+}
+
+function applyZoom() {
+  dom.referenceImage.style.transform = `scale(${state.zoom})`;
+}
+
+function resetZoom() {
+  state.zoom = 1;
+  applyZoom();
+}
+
+function setTheme(darkModeEnabled) {
+  state.darkMode = darkModeEnabled;
+  document.body.classList.toggle("dark-mode", state.darkMode);
+  updateButtons();
 }
 
 function renderPreviews() {
@@ -77,14 +144,96 @@ function renderPreviews() {
     preview.src = image.url;
     preview.alt = image.name;
 
+    const meta = document.createElement("div");
+    meta.className = "preview-meta";
+
     const caption = document.createElement("figcaption");
     caption.textContent = image.name;
 
-    card.append(preview, caption);
+    const controls = document.createElement("div");
+    controls.className = "preview-controls";
+
+    const timeRow = document.createElement("div");
+    timeRow.className = "preview-time";
+
+    const minutesField = document.createElement("label");
+    minutesField.className = "mini-field";
+    const minutesLabel = document.createElement("span");
+    minutesLabel.textContent = "Minutes";
+    const minutesInput = document.createElement("input");
+    minutesInput.type = "number";
+    minutesInput.min = "0";
+    minutesInput.max = "240";
+    minutesInput.value = String(image.minutes);
+    minutesInput.addEventListener("change", (event) => {
+      image.minutes = Math.max(0, Number.parseInt(event.target.value, 10) || 0);
+      if (index === state.currentIndex && !state.isRunning && !state.finished) {
+        state.timeLeft = getImageDuration(image);
+        syncStatus();
+      }
+    });
+    minutesField.append(minutesLabel, minutesInput);
+
+    const secondsField = document.createElement("label");
+    secondsField.className = "mini-field";
+    const secondsLabel = document.createElement("span");
+    secondsLabel.textContent = "Seconds";
+    const secondsInput = document.createElement("input");
+    secondsInput.type = "number";
+    secondsInput.min = "0";
+    secondsInput.max = "59";
+    secondsInput.value = String(image.seconds);
+    secondsInput.addEventListener("change", (event) => {
+      let nextSeconds = Number.parseInt(event.target.value, 10) || 0;
+      nextSeconds = Math.min(59, Math.max(0, nextSeconds));
+      image.seconds = nextSeconds;
+      event.target.value = String(nextSeconds);
+
+      if (index === state.currentIndex && !state.isRunning && !state.finished) {
+        state.timeLeft = getImageDuration(image);
+        syncStatus();
+      }
+    });
+    secondsField.append(secondsLabel, secondsInput);
+
+    timeRow.append(minutesField, secondsField);
+
+    const actionRow = document.createElement("div");
+    actionRow.className = "preview-actions";
+
+    const useButton = document.createElement("button");
+    useButton.type = "button";
+    useButton.className = "ghost";
+    useButton.textContent = "View";
+    useButton.addEventListener("click", () => jumpToImage(index));
+
+    const upButton = document.createElement("button");
+    upButton.type = "button";
+    upButton.className = "ghost";
+    upButton.textContent = "Move up";
+    upButton.disabled = index === 0;
+    upButton.addEventListener("click", () => moveImage(index, index - 1));
+
+    const downButton = document.createElement("button");
+    downButton.type = "button";
+    downButton.className = "ghost";
+    downButton.textContent = "Move down";
+    downButton.disabled = index === state.images.length - 1;
+    downButton.addEventListener("click", () => moveImage(index, index + 1));
+
+    actionRow.append(useButton, upButton, downButton);
+    controls.append(timeRow, actionRow);
+    meta.append(caption, controls);
+    card.append(preview, meta);
     dom.previewGrid.appendChild(card);
   });
 
   dom.queueCount.textContent = `${state.images.length} image${state.images.length === 1 ? "" : "s"}`;
+}
+
+function updateCurrentTimeFromImage() {
+  const current = state.images[state.currentIndex];
+  state.timeLeft = current ? getImageDuration(current) : 0;
 }
 
 function showCurrentImage() {
@@ -103,7 +252,9 @@ function showCurrentImage() {
   dom.viewerState.classList.add("hidden");
   dom.currentImageName.textContent = current.name;
   dom.imageCounter.textContent = `${state.currentIndex + 1} / ${state.images.length}`;
+  resetZoom();
   renderPreviews();
+  updateButtons();
 }
 
 function syncStatus() {
@@ -113,6 +264,7 @@ function syncStatus() {
     dom.countdown.textContent = "00:00";
     dom.currentImageName.textContent = "No image selected";
     setViewerMessage("Upload images to begin.");
+    dom.referenceImage.style.transform = "scale(1)";
     return;
   }
 
@@ -147,6 +299,8 @@ function finishRun() {
   state.isRunning = false;
   state.isPaused = false;
   state.finished = true;
+  playBeep(660, 220);
+  window.setTimeout(() => playBeep(880, 260), 120);
   dom.doneOverlay.classList.remove("hidden");
   renderPreviews();
   syncStatus();
@@ -159,8 +313,9 @@ function advanceImage() {
     return;
   }
 
+  playBeep();
   state.currentIndex += 1;
-  state.timeLeft = state.secondsPerImage;
+  updateCurrentTimeFromImage();
   showCurrentImage();
   syncStatus();
 }
@@ -180,24 +335,16 @@ function tick() {
 }
 
 function startTimer() {
-  const duration = getDurationInSeconds();
-
   if (!state.images.length) {
     window.alert("Please upload at least one image.");
     return;
   }
 
-  if (duration <= 0) {
-    window.alert("Please enter a time greater than 0 seconds.");
-    return;
-  }
-
   stopTimer();
-  state.secondsPerImage = duration;
 
   if (!state.isPaused) {
     state.currentIndex = 0;
-    state.timeLeft = duration;
+    updateCurrentTimeFromImage();
     state.finished = false;
     dom.doneOverlay.classList.add("hidden");
     showCurrentImage();
@@ -226,22 +373,14 @@ function pauseOrResumeTimer() {
 }
 
 function restartTimer() {
-  const duration = getDurationInSeconds();
-
   if (!state.images.length) {
     window.alert("Please upload at least one image.");
     return;
   }
 
-  if (duration <= 0) {
-    window.alert("Please enter a time greater than 0 seconds.");
-    return;
-  }
-
   stopTimer();
-  state.secondsPerImage = duration;
   state.currentIndex = 0;
-  state.timeLeft = duration;
+  updateCurrentTimeFromImage();
   state.isRunning = false;
   state.isPaused = false;
   state.finished = false;
@@ -257,10 +396,11 @@ function resetAll() {
   state.images = [];
   state.currentIndex = 0;
   state.timeLeft = 0;
-  state.secondsPerImage = getDurationInSeconds() || 600;
+  state.defaultSecondsPerImage = getDurationInSeconds() || 600;
   state.isRunning = false;
   state.isPaused = false;
   state.finished = false;
+  resetZoom();
 
   dom.referenceImage.removeAttribute("src");
   dom.referenceImage.classList.add("hidden");
@@ -279,15 +419,19 @@ function handleImagesSelected(event) {
   revokeImageUrls();
 
   const files = Array.from(event.target.files || []);
+  const defaultMinutes = Number.parseInt(dom.minutesInput.value, 10) || 0;
+  const defaultSeconds = Number.parseInt(dom.secondsInput.value, 10) || 0;
   state.images = files.map((file, index) => ({
     id: `${file.name}-${index}-${file.lastModified}`,
     name: file.name,
-    url: URL.createObjectURL(file)
+    url: URL.createObjectURL(file),
+    minutes: defaultMinutes,
+    seconds: defaultSeconds
   }));
 
   state.currentIndex = 0;
-  state.secondsPerImage = getDurationInSeconds() || 600;
-  state.timeLeft = state.secondsPerImage;
+  state.defaultSecondsPerImage = getDurationInSeconds() || 600;
+  updateCurrentTimeFromImage();
   state.isRunning = false;
   state.isPaused = false;
   state.finished = false;
@@ -306,12 +450,85 @@ function handleImagesSelected(event) {
   updateButtons();
 }
 
+function jumpToImage(index) {
+  if (index < 0 || index >= state.images.length) {
+    return;
+  }
+
+  state.currentIndex = index;
+  state.finished = false;
+  dom.doneOverlay.classList.add("hidden");
+  stopTimer();
+  state.isRunning = false;
+  state.isPaused = false;
+  updateCurrentTimeFromImage();
+  showCurrentImage();
+  syncStatus();
+  updateButtons();
+}
+
+function moveImage(fromIndex, toIndex) {
+  if (
+    fromIndex < 0 ||
+    toIndex < 0 ||
+    fromIndex >= state.images.length ||
+    toIndex >= state.images.length ||
+    fromIndex === toIndex
+  ) {
+    return;
+  }
+
+  const [movedImage] = state.images.splice(fromIndex, 1);
+  state.images.splice(toIndex, 0, movedImage);
+
+  if (state.currentIndex === fromIndex) {
+    state.currentIndex = toIndex;
+  } else if (fromIndex < state.currentIndex && toIndex >= state.currentIndex) {
+    state.currentIndex -= 1;
+  } else if (fromIndex > state.currentIndex && toIndex <= state.currentIndex) {
+    state.currentIndex += 1;
+  }
+
+  renderPreviews();
+  showCurrentImage();
+  syncStatus();
+}
+
+function showPreviousImage() {
+  if (state.currentIndex > 0) {
+    jumpToImage(state.currentIndex - 1);
+  }
+}
+
+function showNextImage() {
+  if (state.currentIndex < state.images.length - 1) {
+    jumpToImage(state.currentIndex + 1);
+  }
+}
+
+function zoomIn() {
+  state.zoom = Math.min(4, Number((state.zoom + 0.2).toFixed(2)));
+  applyZoom();
+}
+
+function zoomOut() {
+  state.zoom = Math.max(0.4, Number((state.zoom - 0.2).toFixed(2)));
+  applyZoom();
+}
+
 dom.imageInput.addEventListener("change", handleImagesSelected);
 dom.startButton.addEventListener("click", startTimer);
 dom.pauseButton.addEventListener("click", pauseOrResumeTimer);
 dom.restartButton.addEventListener("click", restartTimer);
 dom.resetButton.addEventListener("click", resetAll);
 dom.runAgainButton.addEventListener("click", startTimer);
+dom.previousButton.addEventListener("click", showPreviousImage);
+dom.nextButton.addEventListener("click", showNextImage);
+dom.zoomInButton.addEventListener("click", zoomIn);
+dom.zoomOutButton.addEventListener("click", zoomOut);
+dom.zoomResetButton.addEventListener("click", resetZoom);
+dom.themeToggle.addEventListener("click", () => setTheme(!state.darkMode));
 
+setTheme(false);
 syncStatus();
 updateButtons();

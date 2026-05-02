@@ -12,11 +12,16 @@
 <body>
   <main class="app-shell">
     <section class="panel controls-panel">
-      <div class="eyebrow">Drawing Practice</div>
-      <h1>Reference Timer</h1>
+      <div class="topbar">
+        <div>
+          <div class="eyebrow">Drawing Practice</div>
+          <h1>Reference Timer</h1>
+        </div>
+        <button id="themeToggle" class="ghost icon-button" type="button" aria-label="Toggle dark mode">Dark mode</button>
+      </div>
       <p class="intro">
-        Upload your reference images, choose how long each image stays on screen,
-        and let the timer cycle through them one by one.
+        Upload your reference images, set a custom timer for each one, reorder them,
+        zoom in while drawing, and move through the queue your way.
       </p>
 
       <label class="field">
@@ -62,10 +67,23 @@
     </section>
 
     <section class="panel viewer-panel">
+      <div class="viewer-toolbar">
+        <div class="nav-group">
+          <button id="previousButton" class="ghost" type="button" disabled>Previous</button>
+          <button id="nextButton" class="ghost" type="button" disabled>Next</button>
+        </div>
+        <div class="zoom-group">
+          <button id="zoomOutButton" class="ghost" type="button" disabled>Zoom -</button>
+          <button id="zoomResetButton" class="ghost" type="button" disabled>Reset zoom</button>
+          <button id="zoomInButton" class="ghost" type="button" disabled>Zoom +</button>
+        </div>
+      </div>
       <div id="viewerState" class="viewer-state">
         <p>Upload images to begin.</p>
       </div>
-      <img id="referenceImage" class="reference-image hidden" alt="Current reference">
+      <div id="referenceStage" class="reference-stage">
+        <img id="referenceImage" class="reference-image hidden" alt="Current reference">
+      </div>
       <div id="doneOverlay" class="done-overlay hidden">
         <h2>Done</h2>
         <p>All reference images have been shown.</p>
@@ -73,6 +91,9 @@
       </div>
     </section>
   </main>
+  <footer class="site-footer">
+    Gifted to the best artist in the world Teo, created by Mariam Ahmad
+  </footer>
 
   <script src="app.js"></script>
 </body>
