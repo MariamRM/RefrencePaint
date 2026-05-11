@@ -18,7 +18,7 @@
           <h1>Reference Timer</h1>
         </div>
         <button id="themeToggle" class="ghost icon-button" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">
-          <span id="themeIcon" aria-hidden="true">☾</span>
+          <span id="themeIcon" aria-hidden="true">&#9790;</span>
         </button>
       </div>
       <p class="intro">
@@ -30,18 +30,6 @@
         <span>Reference images</span>
         <input id="imageInput" type="file" accept="image/*" multiple>
       </label>
-
-      <div class="time-grid">
-        <label class="field">
-          <span>Minutes per image</span>
-          <input id="minutesInput" type="number" min="0" max="240" value="10">
-        </label>
-
-        <label class="field">
-          <span>Seconds per image</span>
-          <input id="secondsInput" type="number" min="0" max="59" value="0">
-        </label>
-      </div>
 
       <div class="button-row">
         <button id="startButton" class="primary">Start</button>
@@ -65,6 +53,24 @@
           <span id="queueCount">0 images</span>
         </div>
         <div id="previewGrid" class="preview-grid"></div>
+      </section>
+
+      <section class="default-time-card">
+        <h2>Default Time For New Images</h2>
+        <p class="helper-text">
+          These values are only used for photos you add next. Changing them will not remove your current queue.
+        </p>
+        <div class="time-grid">
+          <label class="field">
+            <span>Minutes per image</span>
+            <input id="minutesInput" type="number" min="0" max="240" value="10">
+          </label>
+
+          <label class="field">
+            <span>Seconds per image</span>
+            <input id="secondsInput" type="number" min="0" max="59" value="0">
+          </label>
+        </div>
       </section>
     </section>
 

@@ -108,9 +108,10 @@ function updateButtons() {
   dom.zoomInButton.disabled = !hasImages;
   dom.zoomOutButton.disabled = !hasImages;
   dom.zoomResetButton.disabled = !hasImages;
-  dom.themeIcon.textContent = state.darkMode ? "☀" : "☾";
+  dom.themeIcon.innerHTML = state.darkMode ? "&#9728;" : "&#9790;";
   dom.themeToggle.setAttribute("aria-label", state.darkMode ? "Switch to light mode" : "Switch to dark mode");
   dom.themeToggle.setAttribute("title", state.darkMode ? "Switch to light mode" : "Switch to dark mode");
+  document.body.classList.toggle("session-active", state.isRunning || state.isPaused || state.finished);
 }
 
 function applyZoom() {
@@ -419,12 +420,11 @@ function resetAll() {
 
 function handleImagesSelected(event) {
   stopTimer();
-  revokeImageUrls();
 
   const files = Array.from(event.target.files || []);
   const defaultMinutes = Number.parseInt(dom.minutesInput.value, 10) || 0;
   const defaultSeconds = Number.parseInt(dom.secondsInput.value, 10) || 0;
-  state.images = files.map((file, index) => ({
+  const newImages = files.map((file, index) => ({
     id: `${file.name}-${index}-${file.lastModified}`,
     name: file.name,
     url: URL.createObjectURL(file),
@@ -432,25 +432,28 @@ function handleImagesSelected(event) {
     seconds: defaultSeconds
   }));
 
-  state.currentIndex = 0;
+  if (!newImages.length) {
+    return;
+  }
+
+  const hadImages = state.images.length > 0;
+  state.images = [...state.images, ...newImages];
   state.defaultSecondsPerImage = getDurationInSeconds() || 600;
-  updateCurrentTimeFromImage();
   state.isRunning = false;
   state.isPaused = false;
   state.finished = false;
-
   dom.doneOverlay.classList.add("hidden");
+  dom.imageInput.value = "";
 
-  if (state.images.length) {
+  if (!hadImages) {
+    state.currentIndex = 0;
+    updateCurrentTimeFromImage();
     showCurrentImage();
   } else {
-    dom.referenceImage.classList.add("hidden");
-    dom.viewerState.classList.remove("hidden");
+    renderPreviews();
+    syncStatus();
+    updateButtons();
   }
-
-  renderPreviews();
-  syncStatus();
-  updateButtons();
 }
 
 function jumpToImage(index) {
