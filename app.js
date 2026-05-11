@@ -15,6 +15,9 @@ const dom = {
   themeToggle: document.getElementById("themeToggle"),
   themeIcon: document.getElementById("themeIcon"),
   statusLabel: document.getElementById("statusLabel"),
+  floatingTimer: document.getElementById("floatingTimer"),
+  floatingTimerLabel: document.getElementById("floatingTimerLabel"),
+  floatingTimerValue: document.getElementById("floatingTimerValue"),
   imageCounter: document.getElementById("imageCounter"),
   countdown: document.getElementById("countdown"),
   currentImageName: document.getElementById("currentImageName"),
@@ -266,15 +269,22 @@ function syncStatus() {
     dom.statusLabel.textContent = "Waiting for images";
     dom.imageCounter.textContent = "0 / 0";
     dom.countdown.textContent = "00:00";
+    dom.floatingTimerLabel.textContent = "Waiting";
+    dom.floatingTimerValue.textContent = "00:00";
+    dom.floatingTimer.classList.add("hidden");
     dom.currentImageName.textContent = "No image selected";
     setViewerMessage("Upload images to begin.");
     dom.referenceImage.style.transform = "scale(1)";
     return;
   }
 
+  dom.floatingTimer.classList.remove("hidden");
+
   if (state.finished) {
     dom.statusLabel.textContent = "Done";
     dom.countdown.textContent = "00:00";
+    dom.floatingTimerLabel.textContent = "Done";
+    dom.floatingTimerValue.textContent = "00:00";
     dom.imageCounter.textContent = `${state.images.length} / ${state.images.length}`;
     dom.currentImageName.textContent = "All images completed";
     return;
@@ -282,13 +292,17 @@ function syncStatus() {
 
   if (state.isPaused) {
     dom.statusLabel.textContent = "Paused";
+    dom.floatingTimerLabel.textContent = "Paused";
   } else if (state.isRunning) {
     dom.statusLabel.textContent = "Running";
+    dom.floatingTimerLabel.textContent = "Running";
   } else {
     dom.statusLabel.textContent = "Ready";
+    dom.floatingTimerLabel.textContent = "Ready";
   }
 
   dom.countdown.textContent = formatTime(state.timeLeft);
+  dom.floatingTimerValue.textContent = formatTime(state.timeLeft);
 }
 
 function stopTimer() {

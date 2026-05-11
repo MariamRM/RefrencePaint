@@ -407,6 +407,41 @@ button:disabled {
   background: var(--overlay);
 }
 
+.floating-timer {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  z-index: 3;
+  display: grid;
+  gap: 4px;
+  min-width: 108px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--text);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 14px 28px rgba(16, 54, 35, 0.12);
+}
+
+body.dark-mode .floating-timer {
+  background: rgba(12, 18, 27, 0.5);
+  border-color: rgba(145, 171, 201, 0.22);
+  box-shadow: 0 14px 28px rgba(3, 7, 12, 0.24);
+}
+
+.floating-timer-label {
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.floating-timer-value {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
 .viewer-toolbar {
   position: relative;
   z-index: 2;
@@ -514,5 +549,10 @@ button:disabled {
   .viewer-state,
   .done-overlay {
     inset: 122px 18px 18px;
+  }
+
+  .floating-timer {
+    right: 18px;
+    bottom: 18px;
   }
 }
