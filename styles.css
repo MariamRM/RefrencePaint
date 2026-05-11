@@ -215,7 +215,7 @@ button:disabled {
   border-radius: 22px;
   padding: 18px;
   margin-top: 18px;
-  order: 7;
+  order: 3;
 }
 
 .default-time-card {
@@ -224,7 +224,7 @@ button:disabled {
   border-radius: 22px;
   background: linear-gradient(180deg, var(--soft-card-top), var(--soft-card-bottom));
   border: 1px solid rgba(21, 103, 63, 0.12);
-  order: 4;
+  order: 5;
 }
 
 .default-time-card h2 {
@@ -271,7 +271,7 @@ button:disabled {
 }
 
 .controls-panel > .queue {
-  order: 3;
+  order: 4;
 }
 
 .queue-header h2 {
