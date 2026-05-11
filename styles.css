@@ -81,6 +81,9 @@ body.session-active .controls-panel {
 
 .controls-panel {
   padding: 28px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
 }
 
 .topbar {
@@ -88,6 +91,8 @@ body.session-active .controls-panel {
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
+  margin-top: auto;
+  order: 6;
 }
 
 .eyebrow {
@@ -112,6 +117,7 @@ h1 {
   color: var(--muted);
   line-height: 1.55;
   margin-bottom: 24px;
+  order: 5;
 }
 
 .field {
@@ -147,6 +153,7 @@ input[type="number"] {
   flex-wrap: wrap;
   gap: 10px;
   margin: 20px 0 24px;
+  order: 2;
 }
 
 button {
@@ -207,7 +214,8 @@ button:disabled {
   border: 1px solid rgba(21, 103, 63, 0.12);
   border-radius: 22px;
   padding: 18px;
-  margin-bottom: 22px;
+  margin-top: 18px;
+  order: 7;
 }
 
 .default-time-card {
@@ -216,6 +224,7 @@ button:disabled {
   border-radius: 22px;
   background: linear-gradient(180deg, var(--soft-card-top), var(--soft-card-bottom));
   border: 1px solid rgba(21, 103, 63, 0.12);
+  order: 4;
 }
 
 .default-time-card h2 {
@@ -238,7 +247,7 @@ button:disabled {
 
 .countdown {
   margin: 10px 0 6px;
-  font-size: clamp(2.2rem, 8vw, 4rem);
+  font-size: clamp(1.6rem, 5vw, 2.5rem);
   font-weight: 700;
   letter-spacing: -0.04em;
 }
@@ -255,6 +264,14 @@ button:disabled {
   gap: 16px;
   align-items: baseline;
   margin-bottom: 14px;
+}
+
+.controls-panel > .field {
+  order: 1;
+}
+
+.controls-panel > .queue {
+  order: 3;
 }
 
 .queue-header h2 {
